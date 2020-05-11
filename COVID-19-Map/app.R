@@ -5,6 +5,7 @@ library(plotly)
 require(openxlsx)
 library(dplyr)
 library(lubridate)
+library(data.table)
 
 
 date<-Sys.Date()-1
@@ -65,10 +66,10 @@ ui<-fluidPage(
         ),
         mainPanel(
             tabsetPanel(type="tabs",
-                       tabPanel("Map",leafletOutput("map1")),
+                       tabPanel("Map",h4(textOutput("dat1")),leafletOutput("map1")),
                         
-                       tabPanel("Total Cases Graphs",plotlyOutput("graph")),
-                       tabPanel("Daily cases Graphs",plotlyOutput("dgraph")),
+                       tabPanel("Total Cases Graphs",h3(textOutput("graph1")),plotlyOutput("graph"),br(),h3("Corresponding data table:"),br(), DT::dataTableOutput("tbl1")),
+                       tabPanel("Daily cases Graphs",h3(textOutput("graph2")),plotlyOutput("dgraph"),br(),h3("Corresponding data table:"),br(),DT::dataTableOutput("tbl2")),
                        tabPanel("Documentation",
                                 h4("Date slider"),
                                 h6("Use the Date Slider to pick the date interval of the COVID data you're interested in."),
@@ -81,7 +82,11 @@ ui<-fluidPage(
                                 h4("Total Cases Graphs tab"),
                                 h6("Will display the cumulative sums of the COVID-19 cases and/or deaths in the selected date interval and/or country."),
                                 h4("Daily Cases Graphs tab"),
-                                h6("Will display a boxplot of the day-to-day data of the COVID-19 cases and/or deaths in the selected date interval and/or country.")
+                                h6("Will display a boxplot of the day-to-day data of the COVID-19 cases and/or deaths in the selected date interval and/or country."),br(),br(),br(),
+                                h5("___________________________________________________"),
+                                h5("created on 2020-05-11."),
+                                h5("fyras1"),
+                                a("GitHub repository", href="https://github.com/fyras1/COVID-19-Shiny")
                        )
                        
                               
@@ -106,6 +111,25 @@ server<- function(input, output) {
             list("low"=x[1],"hi"=x[2])
         })
         
+       
+       
+        output$dat1<-  renderText({ if(input$cnt=="ALL") 
+                                        paste0("Distribution map of the total Cases/Deaths between ",as.character(dat()$low)," and ",as.character(dat()$hi)  )
+                                    else
+                                        paste0("Distribution map of the total Cases/Deaths between ",as.character(dat()$low)," and ",as.character(dat()$hi), " for ", names(a)[a==input$cnt][1])
+                                            })
+        output$graph1<-  renderText({ if(input$cnt=="ALL") 
+                                        paste0("Graph of the cumulative Cases/Deaths between ",as.character(dat()$low)," and ",as.character(dat()$hi)  )
+                                    else
+                                        paste0("Graph of the cumulative Cases/Deaths between ",as.character(dat()$low)," and ",as.character(dat()$hi), " for ", names(a)[a==input$cnt][1])
+                                            })        
+
+        output$graph2<-  renderText({ if(input$cnt=="ALL") 
+                                        paste0("Graph of the daily new Cases/Deaths between ",as.character(dat()$low)," and ",as.character(dat()$hi)  )
+                                    else
+                                        paste0("Graph of the daily new Cases/Deaths between ",as.character(dat()$low)," and ",as.character(dat()$hi), " for ", names(a)[a==input$cnt][1])
+                                             })
+
         
         covid_up<-reactive({
             x<-dat()
@@ -153,15 +177,23 @@ server<- function(input, output) {
         ## TOTAL (CUMULATIVE GRAPH)
         output$graph<-renderPlotly({
             
-             dff<-covid_up()[,c("cases","deaths","date")]
-             #dff<-dff[dff$cases>0,]
+            dff<-covid_up()[,c("date","cases","deaths")]
+            #dff<-dff[dff$cases>0,]
              
              if(input$cnt=="ALL")
                  dff<- dff %>% group_by(date) %>% summarise(cases=sum(cases),deaths=sum(deaths))
              
+             
+             
+             
              dff$cases<-cumsum(dff$cases)
              dff$deaths<-cumsum(dff$deaths)
              
+             dffr<-dff
+             dffr<- dffr[seq(dim(dffr)[1],1),]
+             dffr$date<-as.character(dffr$date)
+             output$tbl1<-DT::renderDataTable(data.table(dffr))
+
              if(input$chk1 && input$chk2)
              g<- dff %>% tidyr::gather(variable,value,-date) %>%
                  transform(id=as.integer(factor(variable))) %>%
@@ -182,13 +214,18 @@ server<- function(input, output) {
         ## DAILY GRAPH
         output$dgraph<-renderPlotly({
             
-            dff<-covid_up()[,c("cases","deaths","date")]
-            dff<-dff[dff$cases>0,]
+            dff<-covid_up()[,c("date","cases","deaths")]
+            #dff<-dff[dff$cases>0,]
             
             if(input$cnt=="ALL")
                 dff<- dff %>% group_by(date) %>% summarise(cases=sum(cases),deaths=sum(deaths))
-          
             
+            dffr<-dff
+            dffr<- dffr[seq(dim(dffr)[1],1),]
+            dffr$date<-as.character(dffr$date)
+            output$tbl2<-DT::renderDataTable(data.table(dffr))
+            
+
             if(input$chk1 && input$chk2)
                 g<- dff %>% tidyr::gather(variable,value,-date) %>%
                 transform(id=as.integer(factor(variable))) %>%
