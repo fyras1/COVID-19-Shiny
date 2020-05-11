@@ -42,6 +42,8 @@ df2<-df2[ order(df2[,2]), ]
 a<-as.list(as.character(df2[,1]))
 names(a)<-df2[,2]
 
+a<-append(list("United States"="US"),a)
+a<-append(list("Tunisia"="TN"),a)
 a<-append(list("--Select All--"="ALL"),a)
 
 
@@ -85,8 +87,10 @@ ui<-fluidPage(
                                 h6("Will display a boxplot of the day-to-day data of the COVID-19 cases and/or deaths in the selected date interval and/or country."),br(),br(),br(),
                                 h5("___________________________________________________"),
                                 h5("created on 2020-05-11."),
-                                h5("fyras1"),
-                                a("GitHub repository", href="https://github.com/fyras1/COVID-19-Shiny")
+                                h5("email: firas.ismail69@gmail.com"),
+                                a("GitHub repository", href="https://github.com/fyras1/COVID-19-Shiny"),
+                                h5("___________________________________________________"),
+                                a("don't click :c", href="https://www.youtube.com/watch?v=dQw4w9WgXcQ")
                        )
                        
                               
@@ -202,7 +206,7 @@ server<- function(input, output) {
              
              else if(!input$chk1 &&  input$chk2)
                  g<-dff %>% plot_ly(x=~date,y=~deaths,type="scatter",mode="lines",color = I('firebrick3'))
-             else if(input$chk1 && !input$chk2)
+             else 
                  g<-dff %>% plot_ly(x=~date,y=~cases, type="scatter",mode="lines",color = I('dodgerblue3')) 
              g
             #g<-plot_ly(covid_up()[covid_up()$cases>0,],x=~date,y=~cases,mode="lines")
