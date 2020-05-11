@@ -24,16 +24,7 @@ covid$date<-as.Date(paste0(covid$year,"-",covid$month,"-",covid$day))
 
 countries<-read.csv("countries.csv")
 countries$country<-as.character(countries$country)
-#codes<-read.csv("data\\codes.csv" )
 dfx<-merge(covid,countries,by.x="geoId",by.y="country")
-#codes<-codes[,c(2,3)]
-
-#combined<-merge(codes,countries,by.x="Alpha.2.code",by.y="country")
-
-#dfx<-group_by(covid,countryCode=countryterritoryCode)
-
-#dfx<-merge(df,combined[,c(2:5)],by.x="countryCode",by.y="Alpha.3.code")
-
 
 
 
@@ -48,6 +39,8 @@ a<-append(list("--Select All--"="ALL"),a)
 
 
 
+##################################################################
+########################## User Inerface #########################
 
 
 ui<-fluidPage(
@@ -209,18 +202,14 @@ server<- function(input, output) {
              else 
                  g<-dff %>% plot_ly(x=~date,y=~cases, type="scatter",mode="lines",color = I('dodgerblue3')) 
              g
-            #g<-plot_ly(covid_up()[covid_up()$cases>0,],x=~date,y=~cases,mode="lines")
-            #g <- g %>% add_lines(y=~covid_up()[covid_up()$cases>0,"deaths"])
-                                     
-            #g
+          
         })
         
         ## DAILY GRAPH
         output$dgraph<-renderPlotly({
             
             dff<-covid_up()[,c("date","cases","deaths")]
-            #dff<-dff[dff$cases>0,]
-            
+
             if(input$cnt=="ALL")
                 dff<- dff %>% group_by(date) %>% summarise(cases=sum(cases),deaths=sum(deaths))
             
@@ -241,10 +230,7 @@ server<- function(input, output) {
             else 
                 g<-dff %>% plot_ly(x=~date,y=~cases,color = I('dodgerblue3'),type="bar")
             g
-            #g<-plot_ly(covid_up()[covid_up()$cases>0,],x=~date,y=~cases,mode="lines")
-            #g <- g %>% add_lines(y=~covid_up()[covid_up()$cases>0,"deaths"])
-            
-            #g
+        
         })
 }
 
